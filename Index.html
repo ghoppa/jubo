@@ -111,6 +111,20 @@
         });
     });
 }
+function getComingSunday() {
+    const today = new Date();
+    const day = today.getDay(); // Sunday = 0
+
+    const sunday = new Date(today);
+
+    if (day !== 0) {
+        sunday.setDate(today.getDate() + (7 - day));
+    }
+
+    return sunday.toLocaleDateString();
+}
+
+document.getElementById("nextSunday").innerText = getComingSunday();
 </script>
 
 
