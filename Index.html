@@ -42,12 +42,16 @@
 
 google.charts.load('current');
 
-google.charts.setOnLoadCallback(loadSheet);
+google.charts.setOnLoadCallback(function () {
+    loadSheet("Verses");
+    loadSheet("Annoucement");
+    loadSheet("Questions");
+});
 
-function loadSheet() {
+function loadSheet(sheetName) {
 
-    var query = new google.visualization.Query(
-       'https://docs.google.com/spreadsheets/d/17IoHTb3PcJvaKNDMSlxS2Hw6wZgpvOTaQtuWWlaTbP4/gviz/tq?sheet=Verses'
+var query = new google.visualization.Query(
+        `https://docs.google.com/spreadsheets/d/17IoHTb3PcJvaKNDMSlxS2Hw6wZgpvOTaQtuWWlaTbP4/gviz/tq?sheet=${encodeURIComponent(sheetName)}`
     );
 
     query.send(function (response) {
