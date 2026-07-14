@@ -45,126 +45,72 @@
 </head>
 
 <body>
+    <h1>Tournament Schedule</h1>
+    <div id="table"></div>
 
-<h1>Tournament Schedule</h1>
-
-<div id="table"></div>
-
-
-<script>
-
-google.charts.load('current');
-
-google.charts.setOnLoadCallback(loadAllSheets);
-
-
-// Put your Google Sheet tab names here
-const sheets = [
-    "Verses",
-    "Announcements",
-    "Questions"
-];
-
-
-const spreadsheetId = 
-    "17IoHTb3PcJvaKNDMSlxS2Hw6wZgpvOTaQtuWWlaTbP4";
-
-
-function loadAllSheets() {
-
-    sheets.forEach(function(sheetName) {
-        loadSheet(sheetName);
-    });
-
-}
-
-
-
-function loadSheet(sheetName) {
-
-    const url =
-        `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}`;
-
-
-    const query = new google.visualization.Query(url);
-
-
-    query.send(function(response) {
-
-
-        if (response.isError()) {
-
-            document.getElementById("table").insertAdjacentHTML(
-                "beforeend",
-                `<div class="error">
-                    Error loading ${sheetName}: 
-                    ${response.getMessage()}
-                 </div>`
-            );
-
-            return;
+    <script>
+        google.charts.load('current');
+        google.charts.setOnLoadCallback(loadAllSheets);
+        
+        const sheets = [
+            "Verses",
+            "Announcements",
+            "Questions"
+        ];
+        const spreadsheetId = "17IoHTb3PcJvaKNDMSlxS2Hw6wZgpvOTaQtuWWlaTbP4";
+        async function loadAllSheets() {
+            for (const sheetName of sheets) {
+                await loadSheet(sheetName);
+            }
         }
+        
+        function loadSheet(sheetName) {
+            return new Promise(function(resolve) {
 
-
+        const url =`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}`;
+        const query = new google.visualization.Query(url);
+        query.send(function(response) {
+            if (response.isError()) {
+                document.getElementById("table").insertAdjacentHTML(
+                    "beforeend",
+                    `<div class="error">
+                    Error loading ${sheetName}: ${response.getMessage()}
+                    </div>`
+                );
+                resolve();
+                return;
+            }
+        
         const data = response.getDataTable();
-
-
         let html = "";
-
         html += `<h2>${sheetName}</h2>`;
-
         html += "<table>";
-
-
-        // Header row
+            // Header
         html += "<tr>";
 
         for (let c = 0; c < data.getNumberOfColumns(); c++) {
-
-            html += 
-                "<th>" +
-                data.getColumnLabel(c) +
-                "</th>";
-
-        }
-
-        html += "</tr>";
-
-
-
-        // Data rows
-        for (let r = 0; r < data.getNumberOfRows(); r++) {
-
-            html += "<tr>";
-
-            for (let c = 0; c < data.getNumberOfColumns(); c++) {
-
-                html += 
-                    "<td>" +
-                    data.getFormattedValue(r, c) +
-                    "</td>";
-
+                html += "<th>" + data.getColumnLabel(c) + "</th>";
             }
 
+        html += "</tr>";
+            
+        for (let r = 0; r < data.getNumberOfRows(); r++) {
+            html += "<tr>";
+            for (let c = 0; c < data.getNumberOfColumns(); c++) {
+                html += "<td>" +
+                    data.getFormattedValue(r, c) +
+                    "</td>";
+            }
             html += "</tr>";
-
         }
-
-
-        html += "</table>";
-
-
-        // IMPORTANT:
-        // append instead of replacing
-        document
-            .getElementById("table")
-            .insertAdjacentHTML("beforeend", html);
-
+            html += "</table>";
+            document
+                .getElementById("table")
+                .insertAdjacentHTML("beforeend", html);
+            resolve();
+        });
     });
-
 }
-
-
 </script>
 
 
