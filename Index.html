@@ -5,149 +5,194 @@
 
     <script src="https://www.gstatic.com/charts/loader.js"></script>
 
-  <style>
-    * {
-        box-sizing: border-box;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-    body {
-        font-family: Arial, sans-serif;
-        margin: 10px;
-        padding: 0;
-        background: #f8f9fa;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            padding: 0;
+            background: #f8f9fa;
+        }
 
-    h1 {
-        text-align: center;
-        color: #0d6efd;
-        font-size: 1.8rem;
-    }
+        h1 {
+            text-align: center;
+            color: #0d6efd;
+            font-size: 1.8rem;
+        }
 
-    h2 {
-        margin-top: 25px;
-        color: #0d6efd;
-        font-size: 1.3rem;
-    }
+        h2 {
+            margin-top: 25px;
+            color: #0d6efd;
+            font-size: 1.3rem;
+        }
 
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-bottom: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 4px rgba(0,0,0,.1);
-    }
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.1);
+        }
 
- table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-}
+        table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
 
-th,
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            font-size: 16px;
+        }
 
-td {
-    padding: 8px;
-    border: 1px solid #ddd;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    font-size: 16px; /* fixed size */
-}
+        @media (max-width: 768px) {
+            th,
+            td {
+                padding: 6px;
+            }
+        }
 
-@media (max-width: 768px) {
-    th,
-    td {
-        padding: 6px;
-    }
-}
-    }
-</style>
+        /* Hidden answer styles */
+        .hidden-answer {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .hidden-answer .answer {
+            display: none;
+            color: #0d6efd;
+        }
+
+        .hidden-answer.revealed .answer {
+            display: inline;
+        }
+
+        .hidden-answer.revealed .placeholder {
+            display: none;
+        }
+
+        .hidden-answer .placeholder {
+            color: #dc3545;
+            border-bottom: 2px solid #dc3545;
+            padding: 0 6px;
+            user-select: none;
+        }
+    </style>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
+
     <h1>Tournament Schedule</h1>
+
     <div id="table"></div>
 
     <script>
         google.charts.load('current');
         google.charts.setOnLoadCallback(loadAllSheets);
-        
+
         const sheets = [
             "Verses",
             "Questions",
             "Announcements"
         ];
+
         const spreadsheetId = "17IoHTb3PcJvaKNDMSlxS2Hw6wZgpvOTaQtuWWlaTbP4";
+
         async function loadAllSheets() {
             for (const sheetName of sheets) {
                 await loadSheet(sheetName);
             }
         }
-        
+
         function loadSheet(sheetName) {
-            return new Promise(function(resolve) {
+            return new Promise(function (resolve) {
 
-        const url =`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}`;
-        const query = new google.visualization.Query(url);
-        query.send(function(response) {
-            if (response.isError()) {
-                document.getElementById("table").insertAdjacentHTML(
-                    "beforeend",
-                    `<div class="error">
-                    Error loading ${sheetName}: ${response.getMessage()}
-                    </div>`
-                );
-                resolve();
-                return;
-            }
-        
-        const data = response.getDataTable();
-        let html = "";
-        html += `<h2>${sheetName}</h2>`;
-        html += '<div class="table-container"><table>';
-            // Header
-        //html += "<tr>";
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}`;
+                const query = new google.visualization.Query(url);
 
-        //for (let c = 0; c < data.getNumberOfColumns(); c++) {
-        //        html += "<th>" + data.getColumnLabel(c) + "</th>";
-        //    }
+                query.send(function (response) {
 
-        //html += "</tr>";
-            
-        for (let r = 0; r < data.getNumberOfRows(); r++) {
-            html += "<tr>";
-            for (let c = 0; c < data.getNumberOfColumns(); c++) {
-                html += "<td>" +
-                    data.getFormattedValue(r, c) +
-                    "</td>";
-            }
-            html += "</tr>";
+                    if (response.isError()) {
+                        document.getElementById("table").insertAdjacentHTML(
+                            "beforeend",
+                            `<div>Error loading ${sheetName}: ${response.getMessage()}</div>`
+                        );
+                        resolve();
+                        return;
+                    }
+
+                    const data = response.getDataTable();
+
+                    let html = "";
+                    html += `<h2>${sheetName}</h2>`;
+                    html += '<div class="table-container"><table>';
+
+                    for (let r = 0; r < data.getNumberOfRows(); r++) {
+
+                        html += "<tr>";
+
+                        for (let c = 0; c < data.getNumberOfColumns(); c++) {
+
+                            let value = data.getFormattedValue(r, c);
+
+                            // Only hide answers in the Questions sheet
+                            if (sheetName === "Questions") {
+                                value = hideBracketedText(value);
+                            }
+
+                            html += `<td>${value}</td>`;
+                        }
+
+                        html += "</tr>";
+                    }
+
+                    html += "</table></div>";
+
+                    document.getElementById("table")
+                        .insertAdjacentHTML("beforeend", html);
+
+                    resolve();
+                });
+            });
         }
-           html += "</table></div>";
-            document
-                .getElementById("table")
-                .insertAdjacentHTML("beforeend", html);
-            resolve();
-        });
-    });
-}
-function getComingSunday() {
-    const today = new Date();
-    const day = today.getDay(); // Sunday = 0
 
-    const sunday = new Date(today);
+        // Replace [answer] with clickable blank
+        function hideBracketedText(text) {
+            return text.replace(/\[(.*?)\]/g, function (_, answer) {
+                return `
+                    <span class="hidden-answer"
+                          onclick="this.classList.toggle('revealed')">
+                        <span class="placeholder">________</span>
+                        <span class="answer">${answer}</span>
+                    </span>
+                `;
+            });
+        }
 
-    if (day !== 0) {
-        sunday.setDate(today.getDate() + (7 - day));
-    }
+        function getComingSunday() {
+            const today = new Date();
+            const day = today.getDay();
 
-    return sunday.toLocaleDateString();
-}
+            const sunday = new Date(today);
 
-document.getElementById("nextSunday").innerText = getComingSunday();
-</script>
+            if (day !== 0) {
+                sunday.setDate(today.getDate() + (7 - day));
+            }
 
+            return sunday.toLocaleDateString();
+        }
+
+    </script>
 
 </body>
 </html>
